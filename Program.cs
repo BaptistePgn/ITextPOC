@@ -1,4 +1,5 @@
-﻿using iText.Kernel.Colors;
+﻿using iText.Commons.Utils;
+using iText.IO.Image;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Draw;
@@ -7,6 +8,7 @@ using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using System.Data;
+using System.IO;
 
 #region Initialize a PdfDocument
 var writer = new PdfWriter("invoice.pdf");
@@ -23,6 +25,12 @@ float halfWidth = ((pageSize.GetWidth() - (document.GetLeftMargin() + document.G
 #endregion
 
 #region Header
+// Add Logo
+Image logo = new Image(ImageDataFactory.Create(ITextSharpPOC.Properties.Resources.logo_design))
+    .SetWidth(50)
+    .SetHeight(50);
+document.Add(logo);
+
 // Create a Table to contain the two divs
 Table table = new Table(new float[] { halfWidth, halfWidth })
     .SetWidth(UnitValue.CreatePercentValue(100));
