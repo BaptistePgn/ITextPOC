@@ -1,5 +1,6 @@
-﻿using iText.Commons.Utils;
-using iText.IO.Image;
+﻿using iText.IO.Image;
+using iText.Kernel.Colors;
+using iText.Kernel.Events;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Draw;
@@ -7,8 +8,8 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using ITextSharpPOC;
 using System.Data;
-using System.IO;
 
 #region Initialize a PdfDocument
 var writer = new PdfWriter("invoice.pdf");
@@ -22,6 +23,10 @@ using var document = new Document(pdf, pageSize);
 
 // Define the half width of the page
 float halfWidth = ((pageSize.GetWidth() - (document.GetLeftMargin() + document.GetRightMargin())) / 2) - 5;
+
+// Add a footer event handler
+FooterEventHandler footerHandler = new FooterEventHandler();
+pdf.AddEventHandler(PdfDocumentEvent.END_PAGE, footerHandler);
 #endregion
 
 #region Header
@@ -99,7 +104,13 @@ Table dataTablePdf = new Table(new float[] { 5, 1, 1, 1, 1, 1 })
 foreach (DataColumn column in dataTable.Columns)
 {
     dataTablePdf.AddHeaderCell(column.ColumnName);
+
 }
+// Set the header style
+dataTablePdf.GetHeader()
+    .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
+    .SetBold();
+
 
 // Add the data
 foreach (DataRow row in dataTable.Rows)
@@ -118,11 +129,13 @@ decimal totalExcl = dataTable.AsEnumerable().Sum(x => x.Field<decimal>("Total pr
 decimal totalIncl = dataTable.AsEnumerable().Sum(x => x.Field<decimal>("Total price incl. VAT"));
 
 document.Add(new Paragraph($"Total excl. VAT: {totalExcl}").SetTextAlignment(TextAlignment.RIGHT));
-document.Add(new Paragraph($"Total incl. VAT: {totalIncl}").SetTextAlignment(TextAlignment.RIGHT));
+document.Add(new Paragraph($"Total incl. VAT: {totalIncl}")
+    .SetTextAlignment(TextAlignment.RIGHT)
+    .SetFontColor(ColorConstants.RED));
 #endregion
 
 #region Footer 
-// Create a footer
+// Create a footer for this page
 Paragraph footer = new();
 footer.Add("Date\n");
 footer.Add(new Text("\n"));
@@ -132,13 +145,13 @@ footer.SetTextAlignment(TextAlignment.RIGHT);
 footer.SetFixedPosition(-document.GetLeftMargin(), document.GetBottomMargin(), pageSize.GetWidth());
 // Add the footer to the document
 document.Add(footer);
+#endregion
+
+// Add a page break
+document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 
 // Close the document
 document.Close();
-#endregion
-
-
-
 
 
 
